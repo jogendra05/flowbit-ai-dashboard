@@ -17,7 +17,7 @@ export function Sidebar() {
     { icon: FolderOpen, label: "Other files", active: false },
     { icon: Layers, label: "Departments", active: false },
     { icon: Users, label: "Users", active: false },
-    { icon: Settings, label: "Settings", active: false },
+    { icon: Settings, label: "Settings", active: false }, 
   ];
 
   return (
