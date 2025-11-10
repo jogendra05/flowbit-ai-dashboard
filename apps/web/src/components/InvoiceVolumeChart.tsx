@@ -167,7 +167,7 @@ export default function InvoiceVolumeChart() {
             dot={false}
             activeDot={(props: any) => {
               const { cx, cy, index } = props;
-              if (hoveredIndex === null || hoveredIndex !== index) return null;
+              if (hoveredIndex === null || hoveredIndex !== index) return <></>;
               return (
                 <circle cx={cx} cy={cy} r={6} fill="#4338ca" stroke="#fff" strokeWidth={2} />
               );
