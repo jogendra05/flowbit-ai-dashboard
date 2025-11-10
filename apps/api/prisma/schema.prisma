@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Organization {
+  id          String       @id @default(cuid())
+  name        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  departments Department[]
+  invoices    Invoice[]
+
+  @@map("organizations")
+}
+
+model Department {
+  id             String       @id @default(cuid())
+  name           String?
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoices     Invoice[]
+
+  @@index([organizationId])
+  @@map("departments")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String?   @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  uploadedInvoices  Invoice[] @relation("UploadedBy")
+  assignedInvoices  Invoice[] @relation("AssignedTo")
+
+  @@map("users")
+}
+
+// ====================
+// VENDOR & CUSTOMER
+// ====================
+
+model Vendor {
+  id              String    @id @default(cuid())
+  name            String
+  address         String?
+  taxId           String?
+  partyNumber     String?
+  email           String?
+  phone           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  invoices        Invoice[]
+
+  @@unique([name, taxId])
+  @@index([name])
+  @@index([taxId])
+  @@map("vendors")
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  address   String?
+  email     String?
+  phone     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  invoices  Invoice[]
+
+  @@unique([name])
+  @@index([name])
+  @@map("customers")
+}
+
+// ====================
+// INVOICE & RELATED
+// ====================
+
+model Invoice {
+  id               String    @id @default(cuid())
+
+  // Document metadata
+  documentId       String?   @unique // Original MongoDB _id
+  fileName         String
+  filePath         String?
+  fileSize         BigInt?
+  fileType         String?
+  status           InvoiceStatus @default(PENDING)
+
+  // Invoice details
+  invoiceNumber    String?
+  invoiceDate      DateTime?
+  deliveryDate     DateTime?
+  dueDate          DateTime?
+  documentType     String?
+
+  // Financial data
+  subTotal         Decimal?  @db.Decimal(12, 2)
+  totalTax         Decimal?  @db.Decimal(12, 2)
+  total            Decimal?  @db.Decimal(12, 2)
+  currency         String?   @default("EUR")
+
+  // Validation
+  isValidated      Boolean   @default(false)
+
+  // Timestamps
+  processedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Foreign Keys
+  organizationId   String
+  departmentId     String
+  vendorId         String?
+  customerId       String?
+  uploadedById     String?
+  assignedToId     String?
+
+  // Relations
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department       Department   @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  vendor           Vendor?      @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  customer         Customer?    @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  uploadedBy       User?        @relation("UploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  assignedTo       User?        @relation("AssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  lineItems        LineItem[]
+  payment          Payment?
+
+  @@index([status])
+  @@index([invoiceDate])
+  @@index([organizationId])
+  @@index([departmentId])
+  @@index([vendorId])
+  @@index([customerId])
+  @@index([invoiceNumber])
+  @@map("invoices")
+}
+
+model LineItem {
+  id          String   @id @default(cuid())
+
+  // Line item details
+  srNo        Int?
+  description String?
+  category    String?  // For categorizing spend
+  quantity    Decimal? @db.Decimal(10, 3)
+  unitPrice   Decimal? @db.Decimal(12, 2)
+  totalPrice  Decimal? @db.Decimal(12, 2)
+
+  // Additional fields from data
+  sachkonto   String?  // GL account code
+  taxRate     Decimal? @db.Decimal(5, 2)
+
+  // Foreign Keys
+  invoiceId   String
+
+  // Relations
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([invoiceId])
+  @@index([category])
+  @@index([description])
+  @@map("line_items")
+}
+
+model Payment {
+  id                  String   @id @default(cuid())
+
+  // Payment details
+  dueDate             DateTime?
+  paymentTerms        String?
+  bankAccountNumber   String?
+  bic                 String?
+  accountName         String?
+
+  // Discount terms
+  netDays             Int?
+  discountPercentage  Decimal? @db.Decimal(5, 2)
+  discountDays        Int?
+  discountDueDate     DateTime?
+  discountedTotal     Decimal? @db.Decimal(12, 2)
+
+  // Payment status
+  isPaid              Boolean  @default(false)
+  paidAt              DateTime?
+  paidAmount          Decimal? @db.Decimal(12, 2)
+
+  // Foreign Keys
+  invoiceId           String   @unique
+
+  // Relations
+  invoice             Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([dueDate])
+  @@index([isPaid])
+  @@map("payments")
+}
+
+// ====================
+// ENUMS
+// ====================
+
+enum InvoiceStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  VALIDATED
+  REJECTED
+  PAID
+  OVERDUE
+}
+
+
+model ChatHistory {
+  id        String   @id @default(cuid())
+  userQuery String   @db.Text
+  generatedSql String @db.Text
+  resultCount Int
+  success   Boolean
+  userIp    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([success])
+}

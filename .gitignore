@@ -1,0 +1,62 @@
+# Node.js / TypeScript / Next.js
+node_modules/
+dist/
+.next/
+out/
+build/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage/
+.DS_Store
+.env*
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Turborepo cache
+turbo/
+.cache/
+*.tsbuildinfo
+
+# Prisma
+prisma/migrations/
+prisma/generated/
+prisma/dev.db
+prisma/dev.sqlite
+
+# Python Vanna AI server
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.vscode/
+*.sqlite3
+
+# Data files
+*.sqlite
+*.db
+*.db-journal
+*.bak
+*.tmp
+
+# IDE / Editor folders
+.idea/
+.vscode/
+.history/
+*.swp
+
+# OS-generated files
+Thumbs.db
+.DS_Store
+
+# Ignore test dump/output
+*.out
+*.dump
+
+# Ignore analytics test data if not needed in repo (optional)
+Analytics_Test_Data.json
