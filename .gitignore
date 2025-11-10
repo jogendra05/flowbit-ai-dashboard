@@ -58,5 +58,4 @@ Thumbs.db
 *.out
 *.dump
 
-# Ignore analytics test data if not needed in repo (optional)
 Analytics_Test_Data.json

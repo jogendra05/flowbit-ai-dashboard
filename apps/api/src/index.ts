@@ -12,6 +12,7 @@ import vendorsRouter from './routes/vendors.js';
 import categoriesRouter from './routes/categories.js';
 import cashflowRouter from './routes/cashflow.js';
 import invoicesRouter from './routes/invoices.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/vendors', vendorsRouter);
 app.use('/api/category-spend', categoriesRouter);
 app.use('/api/cash-outflow', cashflowRouter);
 app.use('/api/invoices', invoicesRouter);
+app.use('/api', chatRoutes);
 
 // 404
 app.use((req: Request, res: Response) => {
