@@ -151,7 +151,7 @@ export default function InvoiceVolumeChart() {
             activeDot={(props: any) => {
               // when hoveredIndex is set, only show the active dot for that index
               const { cx, cy, index } = props;
-              if (hoveredIndex === null || hoveredIndex !== index) return null;
+              if (hoveredIndex === null || hoveredIndex !== index) return <></>;
               return (
                 <circle cx={cx} cy={cy} r={6} fill="#c7d2fe" stroke="#fff" strokeWidth={2} />
               );
